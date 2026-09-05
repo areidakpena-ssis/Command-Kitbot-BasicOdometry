@@ -68,6 +68,9 @@ public class DriveSubsystem extends SubsystemBase {
     // simulation field for diagnostic
     private final Field2d m_SimModelField = new Field2d();
 
+    // helpers for turning and keeping track of state
+    private Rotation2d m_turnTargetHeading;
+
     // --- Simulation setup --- 
     private final LinearSystem<N2, N2, N2> m_drivetrainSystem =
       LinearSystemId.identifyDrivetrainSystem(
@@ -330,6 +333,27 @@ public class DriveSubsystem extends SubsystemBase {
     /** Turning mechanisms for auto routines and odometry*/
     public void setTurningInPlace(boolean turning) {
         m_turningInPlace = turning;
+    }
+
+
+    /**
+     * Turn by fixed angle in degrees from current heading, CCW positive; 
+     */
+    public Command turnByAngleDegreesCommand(double deltaDegrees) {
+        return runOnce( () -> {
+            m_turnTargetHeading = getHeadingRotation2d().plus(Rotation2d.fromDegrees(deltaDegrees));
+        }).andThen(
+            run( () -> {
+                double speed = (deltaDegrees >= 0)?  0.3 : -0.3;
+                m_turningInPlace = true;
+                m_differentialDrive.tankDrive(-speed, speed, false);
+            }).until(
+                () -> Math.abs(getHeadingRotation2d().minus(m_turnTargetHeading).getDegrees()) < 1.0)
+        ).finallyDo(interrupted -> {
+            stopMotors();
+            m_turningInPlace = false;
+            }
+        );
     }
 
 }

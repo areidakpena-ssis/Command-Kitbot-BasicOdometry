@@ -19,12 +19,27 @@ public final class Autos {
     /** Drive a fixed distance
      * 
      */
-    public static Command driveDistance(DriveSubsystem driveSubsystem) {
+    public static Command driveDistanceAuto(DriveSubsystem driveSubsystem) {
+
+        final double[] startDistance = new double[1];  // mutable box — a plain local can't be reassigned inside a lambda
+
         return Commands.sequence(
-            driveSubsystem.resetEncoderCommand(),
+            Commands.runOnce(() -> startDistance[0] = driveSubsystem.getAverageDistanceMeters()),
+
             driveSubsystem.arcadeDriveCommand(()->0.4, ()->0.0)
-                .until(() -> driveSubsystem.getAverageDistanceMeters() > AutoConstants.kDistanceTargetMeters)
+                .until(() -> driveSubsystem.getAverageDistanceMeters() - startDistance[0] 
+                        > AutoConstants.kDistanceTargetMeters)
                 .finallyDo(() -> driveSubsystem.stopMotors())
+        );
+    }
+
+    public static Command driveTurnDriveAuto(DriveSubsystem driveSubsystem) {
+        return Commands.sequence(
+            driveDistanceAuto(driveSubsystem),
+            Commands.waitSeconds(1.0),
+            driveSubsystem.turnByAngleDegreesCommand(90),
+            Commands.waitSeconds(1.0),
+            driveDistanceAuto(driveSubsystem)
         );
     }
 
