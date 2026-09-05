@@ -44,6 +44,11 @@ driving straight, subtracted when a command has flagged
 are both passed to `m_odometry.update()`, which cannot tell the difference
 between a real sensor and this reconstruction.
 
+This two-branch version is only correct for exactly two motions (straight,
+or a pure point turn) and is flagged as a to-do below to be replaced with a
+general formula that works for any teleop motion, including the blended
+forward-plus-turn arcade drive produces continuously.
+
 ## Simulation
 
 Simulation is enabled. It uses a `DifferentialDrivetrainSim` physics model
@@ -55,16 +60,38 @@ compared visually.
 
 ## Known limitations / To-do
 
-- **Odometry is only reliable for flagged motion, not general teleop
-  driving.** `setTurningInPlace()` is never called anywhere in the current
-  code, so the reconstruction always takes the "driving straight" branch. Any
-  rotation introduced during ordinary arcade-drive teleop (the normal case)
-  is not reflected in the virtual left distance, so the position estimate
-  will drift whenever the driver turns. Priority fix: replace the two-branch
-  flag with the general reconstruction, which needs no flag at all —
-  `Δvirtual = Δreal + trackWidth × Δheading` (or the opposite sign, since the
-  real encoder is on the right here) — since it's exact for any combination
-  of translation and rotation, not just the two flagged cases.
+- **[Priority] Odometry is only reliable for flagged motion, not general
+  teleop driving.** `setTurningInPlace()` is never called anywhere in the
+  current code, so the reconstruction always takes the "driving straight"
+  branch. Any rotation introduced during ordinary arcade-drive teleop (the
+  normal case) is not reflected in the virtual left distance, so the position
+  estimate will drift whenever the driver turns.
+
+  Fix: replace the flag entirely with the general reconstruction, which is
+  exact for any combination of translation and rotation, not just the two
+  flagged cases — `Δleft = Δright − trackWidth × Δheading` (sign flipped from
+  the derivation in earlier discussion, since the real encoder here is on
+  the right, not the left):
+
+  ```java
+  private Rotation2d m_lastHeading;  // must be set explicitly in the
+                                      // constructor — Rotation2d has no
+                                      // usable zero-value default the way a
+                                      // double field does
+
+  // in periodic(), replacing the current deltaRight/turning-flag block:
+  final double deltaHeadingRadians = currentHeading.minus(m_lastHeading).getRadians();
+  m_virtualLeftDistanceMeters += deltaRight - kDriveTrackWidthMeters * deltaHeadingRadians;
+  m_lastHeading = currentHeading;
+  ```
+
+  Once this lands, `m_turningInPlace` and `setTurningInPlace()` are dead code
+  and can be deleted. Note this still can't detect a fault specific to the
+  unmeasured left side alone (a stalled motor, a slipping wheel) — it's
+  derived from the right encoder and gyro, not independently sensed — and its
+  accuracy during turns now depends on how well `kDriveTrackWidthMeters`
+  matches the robot's real geometry, continuously rather than only during
+  flagged autonomous turns.
 - **`resetEncoderCommand()` / `resetEncoders()` don't reset odometry state.**
   They zero the physical CANcoder but leave `m_lastRightDistanceMeters` and
   `m_virtualLeftDistanceMeters` at their old values, and never call
@@ -86,10 +113,9 @@ compared visually.
 - **Add basic turning commands**: `turnToHeadingDegrees(target)` and
   `turnByAngleDegrees(delta)`, reading the Pigeon 2 directly and terminating
   on heading error (remember continuous input across the ±180° wrap). These
-  are also the first commands that would actually call
-  `setTurningInPlace(true)`/`(false)`, which nothing in the current code does
-  — wiring one up is a prerequisite for the odometry reconstruction fix above
-  to matter in practice.
+  no longer need to call `setTurningInPlace()` once the general
+  reconstruction above is in place — write them against the plain gyro
+  reading and `drive.getPose()`, the same as any other autonomous command.
 - **Construct autonomous routines and verify their accuracy.** Chain the new
   turning commands with straight-line driving into a multi-segment sequence
   (e.g. drive a square), and check the final estimated pose against where the
