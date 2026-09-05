@@ -180,10 +180,21 @@ public class DriveSubsystem extends SubsystemBase {
      * Returns the robot heading as a Rotation2d
      * @return
      */
-    @Logged
     public Rotation2d getHeadingRotation2d() {
         return m_pigeon2.getRotation2d();
     }
+
+    /**
+     * Returns the robot heading as a Rotation2d
+     * @return
+     */
+    @Logged
+    public double getHeadingDegrees() {
+        return m_pigeon2.getRotation2d().getDegrees();
+    }
+
+    
+
 
     /**
      * Returns the average distance traveled by both sides in meters.
