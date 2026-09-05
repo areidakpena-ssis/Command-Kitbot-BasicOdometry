@@ -175,6 +175,16 @@ public class DriveSubsystem extends SubsystemBase {
         return m_rightEncoder.getPosition().getValueAsDouble() * kDistancePerRotationMeters;
     }
 
+
+    /**
+     * Returns the robot heading as a Rotation2d
+     * @return
+     */
+    @Logged
+    public Rotation2d getHeadingRotation2d() {
+        return m_pigeon2.getRotation2d();
+    }
+
     /**
      * Returns the average distance traveled by both sides in meters.
      * Convenient for straight-line distance calculations in auto.
