@@ -154,6 +154,10 @@ public class DriveSubsystem extends SubsystemBase {
             .withName("arcadeDrive");
     }
 
+    public void tankDriveNoSquare(double leftSpeed, double rightSpeed) {
+        m_differentialDrive.tankDrive(leftSpeed, rightSpeed, false);
+    }
+
     public Command stopDriveCommand() {
         return runOnce( () -> this.stopMotors() );
     }

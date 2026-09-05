@@ -10,6 +10,8 @@ import frc.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 
+import frc.robot.commands.TurnByAngleDegreesCommand2;
+
 public final class Autos {
     /** Example static factory for an autonomous command. */
     public static Command exampleAuto(ExampleSubsystem subsystem) {
@@ -37,7 +39,8 @@ public final class Autos {
         return Commands.sequence(
             driveDistanceAuto(driveSubsystem),
             Commands.waitSeconds(1.0),
-            driveSubsystem.turnByAngleDegreesCommand(90),
+            //driveSubsystem.turnByAngleDegreesCommand(90),
+            new TurnByAngleDegreesCommand2(driveSubsystem, 90),
             Commands.waitSeconds(1.0),
             driveDistanceAuto(driveSubsystem)
         );
