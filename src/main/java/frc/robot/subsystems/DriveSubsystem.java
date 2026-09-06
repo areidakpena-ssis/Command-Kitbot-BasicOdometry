@@ -212,7 +212,12 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     
-
+    /** 
+     * Returns handle to the kinematics field
+     */
+    public final DifferentialDriveKinematics getKinematics() {
+        return m_kinematics;
+    }
 
     /**
      * Returns the average distance traveled by both sides in meters.
