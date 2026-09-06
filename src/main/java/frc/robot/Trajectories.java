@@ -19,7 +19,7 @@ public class Trajectories {
     public static Trajectory generateTrajectory1() {
         var startPose = new Pose2d(Units.feetToMeters(0.0), Units.feetToMeters(0.0), Rotation2d.fromDegrees(0.0));
 
-        var endPose  =new Pose2d(Units.feetToMeters(20.0), Units.feetToMeters(5.0), Rotation2d.fromDegrees(90.0));
+        var endPose  =new Pose2d(Units.feetToMeters(20.0), Units.feetToMeters(10), Rotation2d.fromDegrees(90.0));
 
         var interiorWaypoints = new ArrayList<Translation2d>();
         interiorWaypoints.add(new Translation2d(Units.feetToMeters(14.0), Units.feetToMeters(-10.0)));

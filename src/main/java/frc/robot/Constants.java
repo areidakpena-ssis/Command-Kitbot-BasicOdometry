@@ -60,8 +60,8 @@ public final class Constants {
         public static final double kDriveBase_kAAngular = 0.25; // 0.25
 
         // estimated max velocity and acceleration
-        public static final double kMaxSpeedMetersPerSecond = 3.0;
-        public static final double kMaxAccelerationMetersPerSecondSquared = 3.0; 
+        public static final double kMaxSpeedMetersPerSecond = 5.0;
+        public static final double kMaxAccelerationMetersPerSecondSquared = 1.0; 
     
 
         /**
