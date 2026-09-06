@@ -37,7 +37,6 @@ public class TurnByAngleDegreesCommand2 extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    m_driveSubsystem.setTurningInPlace(true);
     m_turnSpeed = (m_deltaDegrees >= 0)?  m_turnSpeed : -m_turnSpeed;
   }
 
@@ -53,7 +52,6 @@ public class TurnByAngleDegreesCommand2 extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    m_driveSubsystem.setTurningInPlace(false);
     m_driveSubsystem.stopMotors();
   }
 

@@ -67,8 +67,7 @@ public class DriveSubsystem extends SubsystemBase {
     // signed delta at a time, so it stays continuous across mode switches.
     private double m_virtualLeftDistanceMeters = 0.0;
     private double m_lastRightDistanceMeters;
-    // Set by whichever command currently owns the drivetrain.
-    private boolean m_turningInPlace = false;
+    private Rotation2d m_lastHeading; // heading on previous scheduler tick
 
     // --- kinematics and trajectory following
     private final LTVUnicycleController m_controller = new LTVUnicycleController(0.020);
@@ -136,6 +135,7 @@ public class DriveSubsystem extends SubsystemBase {
         // rest encoders and gyro and initilaize odometry object.
         resetEncoders();
         m_pigeon2.reset();
+        m_lastHeading = m_pigeon2.getRotation2d();
         m_odometry = new DifferentialDriveOdometry(
             m_pigeon2.getRotation2d(), 
             m_virtualLeftDistanceMeters, getRightDistanceMeters()); // should be 0.0, 0,0
@@ -257,8 +257,8 @@ public class DriveSubsystem extends SubsystemBase {
         }
 
         m_odometry.resetPosition(m_pigeon2.getRotation2d(), 
-            m_rightEncoder.getPosition().getValueAsDouble(),
             m_virtualLeftDistanceMeters,
+            getRightDistanceMeters(),
             pose);
     }
 
@@ -278,11 +278,15 @@ public class DriveSubsystem extends SubsystemBase {
         final Rotation2d currentHeading = m_pigeon2.getRotation2d();
         final double currentRight = getRightDistanceMeters();
 
-        // compute deltaRight (for purpose of faking deltaLeft)
+        // compute deltaRight and delta_headings (for purpose of faking deltaLeft)
         final double deltaRight = currentRight - m_lastRightDistanceMeters;
-        m_lastRightDistanceMeters = currentRight;
+        final double deltaHeadingRadians = currentHeading.minus(m_lastHeading).getRadians();
+
         // update virtual left distance; note the +=
-        m_virtualLeftDistanceMeters += m_turningInPlace ? -deltaRight : deltaRight;
+        m_virtualLeftDistanceMeters += deltaRight - kDriveTrackWidthMeters * deltaHeadingRadians;
+
+        m_lastRightDistanceMeters = currentRight;
+        m_lastHeading = currentHeading;
 
         m_odometry.update(currentHeading, m_virtualLeftDistanceMeters, currentRight);
 
@@ -364,12 +368,6 @@ public class DriveSubsystem extends SubsystemBase {
         .withName("testFeedforward");
     }
 
-    /** Turning mechanisms for auto routines and odometry*/
-    public void setTurningInPlace(boolean turning) {
-        m_turningInPlace = turning;
-    }
-
-
     public void setSpeeds(double leftVelocityMetersPerSecond, double rightVelocityMetersPerSecond) {
         double leftVoltage = m_feedforward.calculate(leftVelocityMetersPerSecond);
         double rightVoltage = m_feedforward.calculate(rightVelocityMetersPerSecond);
@@ -402,13 +400,11 @@ public class DriveSubsystem extends SubsystemBase {
         }).andThen(
             run( () -> {
                 double speed = (deltaDegrees >= 0)?  0.3 : -0.3;
-                m_turningInPlace = true;
                 m_differentialDrive.tankDrive(-speed, speed, false);
             }).until(
                 () -> Math.abs(getHeadingRotation2d().minus(m_turnTargetHeading).getDegrees()) < 1.0)
         ).finallyDo(interrupted -> {
             stopMotors();
-            m_turningInPlace = false;
             }
         );
     }

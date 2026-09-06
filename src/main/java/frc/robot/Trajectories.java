@@ -7,6 +7,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.util.Units;
+import frc.robot.subsystems.DriveSubsystem;
 
 import static frc.robot.Constants.DriveConstants.kMaxAccelerationMetersPerSecondSquared;
 import static frc.robot.Constants.DriveConstants.kMaxSpeedMetersPerSecond;
@@ -21,7 +22,8 @@ public class Trajectories {
         var endPose  =new Pose2d(Units.feetToMeters(20.0), Units.feetToMeters(5.0), Rotation2d.fromDegrees(90.0));
 
         var interiorWaypoints = new ArrayList<Translation2d>();
-        interiorWaypoints.add(new Translation2d(Units.feetToMeters(14.0), Units.feetToMeters(-5.0)));
+        interiorWaypoints.add(new Translation2d(Units.feetToMeters(14.0), Units.feetToMeters(-10.0)));
+
 
         TrajectoryConfig config = new TrajectoryConfig(kMaxSpeedMetersPerSecond, kMaxAccelerationMetersPerSecondSquared);
 
