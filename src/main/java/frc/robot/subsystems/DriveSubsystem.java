@@ -16,13 +16,19 @@ import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.controller.LTVUnicycleController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -63,6 +69,11 @@ public class DriveSubsystem extends SubsystemBase {
     private double m_lastRightDistanceMeters;
     // Set by whichever command currently owns the drivetrain.
     private boolean m_turningInPlace = false;
+
+    // --- kinematics and trajectory following
+    private final LTVUnicycleController m_controller = new LTVUnicycleController(0.020);
+    private final DifferentialDriveKinematics m_kinematics = new DifferentialDriveKinematics(kDriveTrackWidthMeters);
+
 
     private final Field2d m_field = new Field2d();
     // simulation field for diagnostic
@@ -230,6 +241,25 @@ public class DriveSubsystem extends SubsystemBase {
     public void resetEncoders() {
         //m_leftEncoder.setPosition(0);
         m_rightEncoder.setPosition(0);
+        m_virtualLeftDistanceMeters = 0.0;
+    }
+
+    /**
+     * The one place this subsystem must accept an absolute pose from outside.
+     * Add a guarded reset of the physics model here once simulation is added,
+     * or the estimate and the simulated robot will disagree permanently.
+     */
+
+    public void resetOdometry(Pose2d pose) {
+        // check for simulation mode
+        if (RobotBase.isSimulation()) {
+            m_drivetrainSimulator.setPose(pose);
+        }
+
+        m_odometry.resetPosition(m_pigeon2.getRotation2d(), 
+            m_rightEncoder.getPosition().getValueAsDouble(),
+            m_virtualLeftDistanceMeters,
+            pose);
     }
 
     /** 
@@ -340,6 +370,29 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
 
+    public void setSpeeds(double leftVelocityMetersPerSecond, double rightVelocityMetersPerSecond) {
+        double leftVoltage = m_feedforward.calculate(leftVelocityMetersPerSecond);
+        double rightVoltage = m_feedforward.calculate(rightVelocityMetersPerSecond);
+
+        m_leftLeader.setVoltage(leftVoltage);
+        m_rightLeader.setVoltage(rightVoltage);
+    }
+
+
+    public void setSpeeds(DifferentialDriveWheelSpeeds differentialDriveWheelSpeeds) {
+
+        double leftVelocityMetersPerSecond = differentialDriveWheelSpeeds.leftMetersPerSecond;
+        double rightVelocityMetersPerSecond = differentialDriveWheelSpeeds.rightMetersPerSecond;
+
+        double leftVoltage = m_feedforward.calculate(leftVelocityMetersPerSecond);
+        double rightVoltage = m_feedforward.calculate(rightVelocityMetersPerSecond);
+
+        m_leftLeader.setVoltage(leftVoltage);
+        m_rightLeader.setVoltage(rightVoltage);
+    }
+
+
+
     /**
      * Turn by fixed angle in degrees from current heading, CCW positive; 
      */
@@ -358,6 +411,13 @@ public class DriveSubsystem extends SubsystemBase {
             m_turningInPlace = false;
             }
         );
+    }
+
+
+    /** Drives one sampled trajectory state. Called once per scheduler pass by a following command. */
+    public void driveToTrajectoryState(Trajectory.State desiredState) {
+        ChassisSpeeds targetSpeeds = m_controller.calculate(m_odometry.getPoseMeters(), desiredState);
+        setSpeeds(m_kinematics.toWheelSpeeds(targetSpeeds));
     }
 
 }

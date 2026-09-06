@@ -4,11 +4,15 @@
 
 package frc.robot.commands;
 
+import frc.robot.Trajectories;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
 
 import frc.robot.commands.TurnByAngleDegreesCommand2;
 
@@ -44,6 +48,14 @@ public final class Autos {
             Commands.waitSeconds(1.0),
             driveDistanceAuto(driveSubsystem)
         );
+    }
+
+    public static Command Trajectory1Auto(DriveSubsystem driveSubsystem) {
+        Trajectory trajectory1 = Trajectories.generateTrajectory1();
+
+        return Commands.runOnce(() -> driveSubsystem.resetOdometry(trajectory1.getInitialPose()))
+            .andThen(new FollowTrajectory(driveSubsystem, trajectory1));
+
     }
 
     private Autos() {

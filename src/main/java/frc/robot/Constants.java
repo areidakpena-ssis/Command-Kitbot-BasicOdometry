@@ -58,6 +58,10 @@ public final class Constants {
         // angular placeholders - update after running sysid with gyro
         public static final double kDriveBase_kVAngular = 1.6; // or 1.6 to account for missing kS
         public static final double kDriveBase_kAAngular = 0.25; // 0.25
+
+        // estimated max velocity and acceleration
+        public static final double kMaxSpeedMetersPerSecond = 3.0;
+        public static final double kMaxAccelerationMetersPerSecondSquared = 3.0; 
     
 
         /**

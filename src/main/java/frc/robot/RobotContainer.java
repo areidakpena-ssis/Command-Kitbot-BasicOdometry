@@ -100,7 +100,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return Autos.driveTurnDriveAuto(m_driveSubsystem);
+        return Autos.Trajectory1Auto(m_driveSubsystem);
     }
     
 }
