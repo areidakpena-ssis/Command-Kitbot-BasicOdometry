@@ -211,6 +211,14 @@ public class DriveSubsystem extends SubsystemBase {
         return m_pigeon2.getRotation2d().getDegrees();
     }
 
+    /**
+     * Returns the robot pose, according to odometry. 
+     * @return
+     */
+    public Pose2d getPose() {
+        return m_odometry.getPoseMeters();
+    }
+
     
     /** 
      * Returns handle to the kinematics field
