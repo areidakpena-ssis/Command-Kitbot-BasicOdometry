@@ -39,6 +39,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.sim.CANcoderSimState;
@@ -59,7 +60,7 @@ public class DriveSubsystem extends SubsystemBase {
     private final CANcoder m_rightEncoder = new CANcoder(kRightEncoderID);
 
     // --- Gryo ----
-    private final Pigeon2 m_pigeon2 = new Pigeon2(0);  // need to install on CAN bus
+    private final Pigeon2 m_pigeon2 = new Pigeon2(kPigeon2ID);  // need to install on CAN bus
 
     // --- Odometry ---
     private final DifferentialDriveOdometry m_odometry;
@@ -140,13 +141,20 @@ public class DriveSubsystem extends SubsystemBase {
             m_pigeon2.getRotation2d(), 
             m_virtualLeftDistanceMeters, getRightDistanceMeters()); // should be 0.0, 0,0
 
-        m_differentialDrive = new DifferentialDrive(m_leftLeader, m_rightLeader);
+        // BaseStatusSignal.setUpdateFrequencyForAll(50,
+        //     m_rightEncoder.getPosition(),
+        //     m_rightEncoder.getVelocity(),
+        //     m_pigeon2.getYaw());
 
+        System.out.println("Position Hz: " + m_rightEncoder.getPosition().getAppliedUpdateFrequency());
+        System.out.println("Yaw Hz: " + m_pigeon2.getYaw().getAppliedUpdateFrequency());
 
         if (RobotBase.isSimulation()) {
             m_rightEncoderSim = m_rightEncoder.getSimState();
             m_gyroSim = m_pigeon2.getSimState();
         }
+
+        m_differentialDrive = new DifferentialDrive(m_leftLeader, m_rightLeader);
 
         SmartDashboard.putData("Field", m_field);
     }
@@ -387,6 +395,8 @@ public class DriveSubsystem extends SubsystemBase {
 
         m_leftLeader.setVoltage(leftVoltage);
         m_rightLeader.setVoltage(rightVoltage);
+
+        m_differentialDrive.feed();
     }
 
 

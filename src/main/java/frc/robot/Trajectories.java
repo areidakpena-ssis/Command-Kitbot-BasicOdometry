@@ -16,6 +16,7 @@ import static frc.robot.Constants.DriveConstants.kMaxAccelerationMetersPerSecond
 import static frc.robot.Constants.DriveConstants.kMaxSpeedMetersPerSecond;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Trajectories {
     
@@ -23,12 +24,14 @@ public class Trajectories {
 
         DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(kDriveTrackWidthMeters);
 
-        var startPose = new Pose2d(Units.feetToMeters(0.0), Units.feetToMeters(0.0), Rotation2d.fromDegrees(0.0));
+        var startPose = new Pose2d(Units.feetToMeters(0.0), Units.feetToMeters(10.0), Rotation2d.fromDegrees(0.0));
 
         var endPose  =new Pose2d(Units.feetToMeters(20.0), Units.feetToMeters(10), Rotation2d.fromDegrees(90.0));
 
         var interiorWaypoints = new ArrayList<Translation2d>();
-        interiorWaypoints.add(new Translation2d(Units.feetToMeters(14.0), Units.feetToMeters(-10.0)));
+        interiorWaypoints.add(new Translation2d(Units.feetToMeters(9.0), Units.feetToMeters(-8.0)));
+        interiorWaypoints.add(new Translation2d(Units.feetToMeters(13.0), Units.feetToMeters(-10.0)));
+        interiorWaypoints.add(new Translation2d(Units.feetToMeters(16.0), Units.feetToMeters(-8.0)));
 
 
         TrajectoryConfig config = new TrajectoryConfig(kMaxSpeedMetersPerSecond, kMaxAccelerationMetersPerSecondSquared)
@@ -44,5 +47,29 @@ public class Trajectories {
             config);
 
         return trajectory;
+    }
+
+
+    public static Trajectory generateTrajectory2() {
+        DifferentialDriveKinematics kinematics = new DifferentialDriveKinematics(kDriveTrackWidthMeters);
+
+        TrajectoryConfig config = new TrajectoryConfig(kMaxSpeedMetersPerSecond, kMaxAccelerationMetersPerSecondSquared)
+            .setKinematics(kinematics)
+            .addConstraint(new DifferentialDriveKinematicsConstraint(kinematics, kMaxSpeedMetersPerSecond));
+
+        var startPose = new Pose2d(Units.feetToMeters(0.0), Units.feetToMeters(0.0), Rotation2d.fromDegrees(-90.0));
+
+        var endPose  =new Pose2d(Units.feetToMeters(20.0), Units.feetToMeters(0), Rotation2d.fromDegrees(-90));
+
+        return TrajectoryGenerator.generateTrajectory(
+            List.of(
+                startPose,
+                new Pose2d(Units.feetToMeters(5.0), Units.feetToMeters(-5.0), Rotation2d.fromDegrees(0.0)),
+                new Pose2d(Units.feetToMeters(10.0), Units.feetToMeters(0.0), Rotation2d.fromDegrees(90.0)),
+                new Pose2d(Units.feetToMeters(15.0), Units.feetToMeters(5.0), Rotation2d.fromDegrees(0.0)),
+                //new Pose2d(Units.feetToMeters(.0), Units.feetToMeters(0.0), Rotation2d.fromDegrees(90.0)),
+                endPose),
+            config);
+        
     }
 }

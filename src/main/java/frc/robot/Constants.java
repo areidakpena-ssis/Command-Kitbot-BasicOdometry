@@ -25,6 +25,7 @@ public final class Constants {
         public static final int kRightFollowerId = 7;
 
         public static final int kRightEncoderID = 4;
+        public static final int kPigeon2ID = 5;
 
         public static final boolean kLeftLeaderReversed = true;
         public static final boolean kRightLeaderReversed = false;

@@ -58,6 +58,14 @@ public final class Autos {
 
     }
 
+    public static Command Trajectory2Auto(DriveSubsystem driveSubsystem) {
+        Trajectory trajectory2 = Trajectories.generateTrajectory2();
+
+        return Commands.runOnce(() -> driveSubsystem.resetOdometry(trajectory2.getInitialPose()))
+            .andThen(new FollowTrajectory(driveSubsystem, trajectory2));
+
+    }
+
     private Autos() {
         throw new UnsupportedOperationException("This is a utility class!");
     }
